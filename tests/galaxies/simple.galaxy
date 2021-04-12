@@ -1,0 +1,23 @@
+galaxy_name: "Simple Test"
+
+stars:
+  $0:
+    name: "Fiesta"
+    size: "large"
+    central: true
+
+planets:
+  $0:
+    name: "Moe"
+    size: "medium"
+    type: "earth-like"
+    $orbit:
+      rank: 1
+      speed: "normal"
+  $1:
+    name: "Fire"
+    size: "medium"
+    type: "earth-like"
+    $orbit:
+      rank: 2
+      speed: "normal"

@@ -1,5 +1,13 @@
 import { Many as LodashMany, PropertyName as LodashPropertyName, set as lodashSet, get as lodashGet } from 'lodash'
 
+export const TokenPattern = {
+  tag: new RegExp(`[^$\\^\\s]+:`),
+  section: new RegExp(`\\$.+:`),
+  text: new RegExp(`\".*\"`),
+  num: new RegExp(`\\d+`),
+  constants: new RegExp(`nil|true|false`)
+}
+
 interface TokenMap {
   [key: string]: any
 }
@@ -35,6 +43,23 @@ export class GalaxyTokenizer {
     return this._tokenMap
   }
 
+  // TODO: fix these stats
+  // get tokenStats() {
+  //   const constants = this.contents.match(TokenPattern.constants)?.length
+  //   const sections = this.contents.match(TokenPattern.section)?.length
+  //   const numbers = this.contents.match(TokenPattern.num)?.length
+  //   const text = this.contents.match(TokenPattern.text)?.length
+  //   const tags = this.contents.match(TokenPattern.tag)?.length
+
+  //   return {
+  //     constants,
+  //     sections,
+  //     numbers,
+  //     text,
+  //     tags
+  //   }
+  // }
+
   private parseTokens() {
     if(!this._tokens.length) {
       this._tokens = this.contents.split(/\s+/)
@@ -43,12 +68,15 @@ export class GalaxyTokenizer {
     let stringBuffer = ""
     let didJustAddToStringBuffer = false
     let withinSection = false
+    let inComment = false
 
     for(const token of this._tokens) {
       if(token == '') continue
       switch(token[token.length - 1]) {
         case ':':
           // figure out if its a array item
+          if(inComment)
+            break
           if((token[0] == '$' || withinSection) && !['galaxy_name:', 'stars:', 'planets:'].includes(token)) {
             if(token[0] == '$') {
               let sectorKey = token.replace(/\$|:/g, '')
@@ -98,8 +126,13 @@ export class GalaxyTokenizer {
             withinSection = false
           }
           break
+        case '%':
+          inComment = false
+          break
         case '"':
           // close string
+          if(inComment)
+            break
           if(didJustAddToStringBuffer) {
             stringBuffer += ` ${token.replace(/"/g, '')}`
             this.assignToTokenMap(keyBuffer, stringBuffer)
@@ -111,7 +144,12 @@ export class GalaxyTokenizer {
             this.assignToTokenMap(keyBuffer, token.replace(/"/g, ''))
           break
         default:
-          if(token[0] == '"') {
+          if(token[0] == '%') {
+            inComment = true
+            break
+          } else if(inComment)
+            break
+          else if(token[0] == '"') {
             stringBuffer = token.replace(/"/g, '')
             didJustAddToStringBuffer = true
           } else if(keyBuffer.length && !isNaN(Number(token)))

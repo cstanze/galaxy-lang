@@ -1,9 +1,11 @@
-galaxy_name: "Extended Test"
+%test line comment%
+
+galaxy_name: "Extended Test" %test line cap comment%
 
 stars:
   $0:
     name: "Bold"
-    size: "large"
+    size: "large" %test line cap comment 2%
     central: true
   $1:
     name: "Aiwa"
